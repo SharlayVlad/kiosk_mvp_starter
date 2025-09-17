@@ -1,5 +1,8 @@
-﻿from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text
+from typing import Optional
+
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text
 from sqlalchemy.orm import relationship, Mapped, mapped_column
+
 from .db import Base
 
 class ButtonGroup(Base):
@@ -7,8 +10,8 @@ class ButtonGroup(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(String(120))
     order_index: Mapped[int] = mapped_column(Integer, default=0)
-    bg_color: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    text_color: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    bg_color: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    text_color: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
 
 class Theme(Base):
     __tablename__ = "themes"
@@ -26,7 +29,7 @@ class Settings(Base):
     org_name: Mapped[str] = mapped_column(String(120), default="Organization")
     footer_qr_text: Mapped[str] = mapped_column(String(255), default="")
     footer_clock_format: Mapped[str] = mapped_column(String(20), default="%H:%M")
-    theme_id: Mapped[int | None] = mapped_column(ForeignKey("themes.id"))
+    theme_id: Mapped[Optional[int]] = mapped_column(ForeignKey("themes.id"))
     theme: Mapped["Theme"] = relationship()
     # РџР°СЂРѕР»СЊ РІС‹С…РѕРґР° РёР· РїРѕР»РЅРѕСЌРєСЂР°РЅРЅРѕРіРѕ СЂРµР¶РёРјР° (bcrypt С…СЌС€)
     exit_password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -65,10 +68,10 @@ class Button(Base):
     title: Mapped[str] = mapped_column(String(120))
     target_slug: Mapped[str] = mapped_column(String(80))  # СЃСЃС‹Р»Р°С‚СЊСЃСЏ РЅР° Page.slug
     order_index: Mapped[int] = mapped_column(Integer, default=0)
-    bg_color: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    text_color: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    icon_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    group_id: Mapped[int | None] = mapped_column(ForeignKey("button_groups.id"), nullable=True)
+    bg_color: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    text_color: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    icon_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    group_id: Mapped[Optional[int]] = mapped_column(ForeignKey("button_groups.id"), nullable=True)
 
 class User(Base):
     __tablename__ = "users"
