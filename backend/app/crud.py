@@ -146,6 +146,12 @@ def ensure_settings_columns(db: Session):
     if 'exit_password_hash' not in names:
         db.execute(text("ALTER TABLE settings ADD COLUMN exit_password_hash VARCHAR(255)"))
         db.commit()
+    if 'footer_qr_text' not in names:
+        db.execute(text("ALTER TABLE settings ADD COLUMN footer_qr_text VARCHAR(255) DEFAULT ''"))
+        db.commit()
+    if 'footer_clock_format' not in names:
+        db.execute(text("ALTER TABLE settings ADD COLUMN footer_clock_format VARCHAR(20) DEFAULT '%H:%M'"))
+        db.commit()
     # Footer visibility toggles and weather settings
     if 'show_clock' not in names:
         db.execute(text("ALTER TABLE settings ADD COLUMN show_clock BOOLEAN DEFAULT 1"))

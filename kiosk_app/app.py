@@ -169,8 +169,7 @@ class App(QWidget):
         self.footer.deleteLater()
         self.footer = Footer(
             self.theme,
-            cfg.get("footer_clock_format", "%H:%M"),
-            cfg.get("footer_qr_text", ""),
+            qr_text=cfg.get("footer_qr_text", ""),
         )
         self.root_layout.addWidget(self.footer)
 
@@ -212,6 +211,13 @@ class App(QWidget):
                     except Exception:
                         pass
                     self._weather_state = {"show": False, "city": None}
+        except Exception:
+            pass
+
+        try:
+            qr_text = (cfg.get("footer_qr_text") or "").strip()
+            if getattr(self, 'footer', None):
+                self.footer.set_qr(qr_text)
         except Exception:
             pass
 

@@ -223,6 +223,10 @@ def update_settings(payload: SettingsUpdate, db=Depends(get_db), user=Depends(re
             db.add(s.theme)
         s.theme.logo_path = payload.logo_path
         changed = True
+    if payload.footer_qr_text is not None:
+        value = payload.footer_qr_text.strip() if isinstance(payload.footer_qr_text, str) else str(payload.footer_qr_text).strip()
+        s.footer_qr_text = value
+        changed = True
     # Kiosk exit password (optional)
     if payload.kiosk_exit_password:
         try:
@@ -243,6 +247,10 @@ def update_settings(payload: SettingsUpdate, db=Depends(get_db), user=Depends(re
         pass
     if changed:
         db.commit(); db.refresh(s)
+        try:
+            _publish_event({"type": "config_updated"})
+        except Exception:
+            pass
     # return updated config snapshot (compatible with callers)
     return {
         "org_name": s.org_name,
@@ -595,6 +603,14 @@ def update_settings(payload: SettingsUpdate, db=Depends(get_db), user=Depends(re
             s.theme = models.Theme()
             db.add(s.theme); db.flush()
         s.theme.logo_path = logo_path
+    if "footer_qr_text" in data:
+        raw_qr = data.get("footer_qr_text")
+        if isinstance(raw_qr, str):
+            s.footer_qr_text = raw_qr.strip()
+        elif raw_qr is None:
+            s.footer_qr_text = ""
+        else:
+            s.footer_qr_text = str(raw_qr).strip()
     kep = data.get("kiosk_exit_password")
     if kep:
         # захешируем как пароль пользователя
@@ -612,6 +628,10 @@ def update_settings(payload: SettingsUpdate, db=Depends(get_db), user=Depends(re
     except Exception:
         pass
     db.commit(); db.refresh(s)
+    try:
+        _publish_event({"type": "config_updated"})
+    except Exception:
+        pass
     return {"ok": True}
 
 

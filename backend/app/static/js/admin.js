@@ -664,6 +664,8 @@ let themeState = { bg: '#f5f7fb', bg_image_path: null, loading: false };
 let screensaverFile, screensaverPick, screensaverUpload, screensaverClear, screensaverStatus, screensaverPreview, screensaverPreviewVideo, screensaverPreviewImage, screensaverPreviewText, screensaverTimeoutInput, screensaverSaveBtn;
 let screensaverState = { path: null, timeout: 0, loading: false };
 let screensaverSaveTimer = null;
+let qrLinkInput, qrGenerateBtn, qrSaveBtn, qrClearBtn, qrPreviewCanvas, qrStatus;
+let qrState = { savedLink: '', previewLink: '' };
 
 async function loadConfig(){
   try{
@@ -1380,21 +1382,131 @@ async function saveTheme(){
     });
     if (!res.ok){
       const txt = await res.text();
-      throw new Error(txt || 'Не удалось сохра#dить изменения');
+      throw new Error(txt || 'Не удалось обновить оформление');
     }
     const data = await res.json();
     themeState.bg = data?.bg || payload.bg;
     themeState.bg_image_path = data?.bg_image_path || null;
     updateThemeStatus('Настройки сохранены');
-    showToast?.({ title:'Сохра#dе#dо', type:'success' });
+    showToast?.({ title:'Сохранено', type:'success' });
   } catch(err){
     console.error(err);
-    updateThemeStatus(err.message || 'Ошибка сохра#dе#dия');
-    showToast?.({ title:'Оши#1#a#0', message: err.message || '', type:'error' });
+    updateThemeStatus(err.message || 'Ошибка сохранения');
+    showToast?.({ title:'Ошибка', message: err.message || '', type:'error' });
   } finally {
     themeState.loading = false;
     updateThemePreview();
     handleThemeFileChange({ keepMessage: true });
+  }
+}
+
+function updateQrStatus(message = '', isError = false) {
+  if (!qrStatus) return;
+  qrStatus.textContent = message;
+  qrStatus.style.color = isError ? '#dc2626' : '';
+}
+
+function clearQrPreview() {
+  if (!qrPreviewCanvas) return;
+  const ctx = qrPreviewCanvas.getContext('2d');
+  if (ctx) {
+    ctx.clearRect(0, 0, qrPreviewCanvas.width, qrPreviewCanvas.height);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, qrPreviewCanvas.width, qrPreviewCanvas.height);
+  }
+  qrState.previewLink = '';
+}
+
+function renderQr(link) {
+  const value = (link || '').trim();
+  if (!qrPreviewCanvas) return;
+  if (!value) {
+    clearQrPreview();
+    updateQrStatus('QR отключён');
+    return;
+  }
+  if (typeof window.QRCode === 'undefined') {
+    updateQrStatus('Не загружена библиотека QRCode', true);
+    return;
+  }
+  clearQrPreview();
+  window.QRCode.toCanvas(qrPreviewCanvas, value, { width: qrPreviewCanvas.width, margin: 1 }, (err) => {
+    if (err) {
+      console.error(err);
+      updateQrStatus('Не удалось построить QR', true);
+      return;
+    }
+    qrState.previewLink = value;
+    updateQrStatus('QR обновлён');
+  });
+}
+
+function applyQrConfig(link) {
+  const normalized = (link || '').trim();
+  qrState.savedLink = normalized;
+  if (qrLinkInput) qrLinkInput.value = normalized;
+  renderQr(normalized);
+  if (!normalized) updateQrStatus('QR отключён');
+}
+
+async function saveQrLink() {
+  const link = (qrLinkInput ? qrLinkInput.value : '').trim();
+  if (link && qrState.previewLink !== link) {
+    updateQrStatus('Сначала нажмите «Сгенерировать»', true);
+    return;
+  }
+  try {
+    const res = await fetch('/admin/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ footer_qr_text: link })
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || 'Не удалось сохранить QR');
+    }
+    qrState.savedLink = link;
+    updateQrStatus(link ? 'QR сохранён' : 'QR отключён');
+    showToast?.({ title: 'Готово', type: 'success' });
+  } catch (err) {
+    console.error(err);
+    updateQrStatus(err.message || 'Ошибка сохранения', true);
+    showToast?.({ title: 'Ошибка', message: err.message || '', type: 'error' });
+  }
+}
+
+function initQrSettings() {
+  qrLinkInput = document.getElementById('qrLinkInput');
+  qrGenerateBtn = document.getElementById('qrGenerate');
+  qrSaveBtn = document.getElementById('qrSave');
+  qrClearBtn = document.getElementById('qrClear');
+  qrPreviewCanvas = document.getElementById('qrPreviewCanvas');
+  qrStatus = document.getElementById('qrStatus');
+
+  clearQrPreview();
+  updateQrStatus('QR отключён');
+
+  if (qrGenerateBtn) {
+    qrGenerateBtn.onclick = () => {
+      const link = (qrLinkInput ? qrLinkInput.value : '').trim();
+      if (!link) {
+        updateQrStatus('Введите ссылку', true);
+        clearQrPreview();
+        return;
+      }
+      renderQr(link);
+    };
+  }
+  if (qrSaveBtn) {
+    qrSaveBtn.onclick = () => saveQrLink();
+  }
+  if (qrClearBtn) {
+    qrClearBtn.onclick = () => {
+      if (qrLinkInput) qrLinkInput.value = '';
+      renderQr('');
+      updateQrStatus('QR отключён. Нажмите «Сохранить».');
+    };
   }
 }
 
@@ -1609,6 +1721,7 @@ async function loadThemeSection(){
     updateThemePreview();
     updateThemeStatus();
     handleThemeFileChange({ keepMessage: true });
+    applyQrConfig((cfg && cfg.footer_qr_text) || '');
     applyScreensaverConfig((cfg && cfg.screensaver) || {});
   } catch(err){
     console.error(err);
@@ -1639,6 +1752,7 @@ function initTheme(){
   };
   if (themeSaveBtn) themeSaveBtn.onclick = saveTheme;
 
+  initQrSettings();
   initScreensaver();
   handleThemeFileChange({ keepMessage: true });
   updateThemePreview();

@@ -282,7 +282,8 @@
           </div>
           <div class="row" style="align-items:flex-start;">
             <div>
-              <div class="muted small">Изображение фона (png/jpg/webp)</div>
+              <div class="muted small">Изображение фона (png/jpg/webp)</div>
+
               <div class="muted small" style="margin-top:4px;">Размер изображения загружать согласно разрешению экрана.</div>
               <div class="u-row" style="margin-top:8px;">
                 <input id="themeBgFile" type="file" accept=".png,.jpg,.jpeg,.webp" />
@@ -333,6 +334,31 @@
             <button id="screensaverSave" class="btn primary">Сохранить</button>
           </div>
         </section>
+                <section class="panel" style="margin-top:18px;">
+          <h3 style="margin-top:0;">QR-код для киоска</h3>
+          <p class="muted small">Введите ссылку, нажмите «Сгенерировать», затем «Сохранить» — и QR появится в правом нижнем углу киоска.</p>
+          <div class="form-grid" style="max-width:360px;">
+            <label class="field">
+              <span>Ссылка</span>
+              <input id="qrLinkInput" type="url" placeholder="https://example.com" />
+            </label>
+          </div>
+          <div class="row" style="align-items:flex-start; gap:16px; flex-wrap:wrap;">
+            <div>
+              <div class="u-row" style="gap:8px;">
+                <button id="qrGenerate" class="u-btn" type="button">Сгенерировать</button>
+                <button id="qrSave" class="u-btn primary" type="button">Сохранить</button>
+                <button id="qrClear" class="u-btn ghost" type="button">Очистить</button>
+              </div>
+              <div id="qrStatus" class="muted small" style="margin-top:8px;">QR отключён</div>
+            </div>
+            <div id="qrPreviewWrap" style="min-width:180px;">
+              <div class="muted small">Предпросмотр</div>
+              <canvas id="qrPreviewCanvas" width="180" height="180" style="background:#ffffff; border-radius:12px; box-shadow:0 4px 16px rgba(15,20,25,0.15);"></canvas>
+            </div>
+          </div>
+        </section>
+        </section>
       </section>
 
       
@@ -340,6 +366,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
   <script src="/static/js/admin.js"></script>
 </body>
 </html>

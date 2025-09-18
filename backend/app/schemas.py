@@ -28,6 +28,7 @@ class ConfigOut(BaseModel):
 class SettingsUpdate(BaseModel):
     org_name: Optional[str] = None
     logo_path: Optional[str] = None
+    footer_qr_text: Optional[str] = None
     kiosk_exit_password: Optional[str] = None  # plaintext from admin UI; backend will hash
     show_weather: Optional[bool] = None
     weather_city: Optional[str] = None
